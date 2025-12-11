@@ -1,8 +1,5 @@
-//! Market Chain State
-//!
-//! Manages multiple prediction markets' betting pools and resolution.
 
-use flashbet_shared::{Bet, EventId, MarketInfo, MarketStatus, Outcome};
+use test_shared::{Bet, EventId, MarketInfo, MarketStatus, Outcome};
 use linera_sdk::{
     linera_base_types::{Amount, ApplicationId, ChainId},
     views::{linera_views, MapView, RegisterView, RootView, SetView, ViewStorageContext},
@@ -10,7 +7,7 @@ use linera_sdk::{
 
 #[derive(RootView)]
 #[view(context = ViewStorageContext)]
-pub struct FlashbetMarketState {
+pub struct testMarketState {
     /// Markets indexed by EventId
     /// Maps EventId -> MarketInfo
     pub markets: MapView<EventId, MarketInfo>,
@@ -42,15 +39,15 @@ pub struct FlashbetMarketState {
     pub oracle_app_id: RegisterView<Option<ApplicationId>>,
 
     /// BET token application ID for token operations
-    /// Typed with FlashbetTokenAbi for cross-application calls
-    pub bet_token_id: RegisterView<Option<ApplicationId<flashbet_token::FlashbetTokenAbi>>>,
+    /// Typed with testTokenAbi for cross-application calls
+    pub bet_token_id: RegisterView<Option<ApplicationId<test_token::testTokenAbi>>>,
 
     /// Subscribed User applications (shared across all markets)
     /// Tracks which User chains/apps we're listening to
     pub subscribed_users: SetView<ApplicationId>,
 }
 
-impl FlashbetMarketState {
+impl testMarketState {
     /// Get market info for a specific event
     pub async fn get_market(&self, event_id: &EventId) -> Option<MarketInfo> {
         self.markets
