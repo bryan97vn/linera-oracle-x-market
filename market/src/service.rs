@@ -5,7 +5,7 @@ mod state;
 use std::sync::Arc;
 
 use async_graphql::{EmptySubscription, Object, Schema};
-use flashbet_market::Operation;
+use test_market::Operation;
 use flashbet_shared::{Bet, EventId, MarketInfo, MarketStatus, MarketType, Outcome};
 use linera_sdk::{
     graphql::GraphQLMutationRoot,
@@ -24,7 +24,7 @@ pub struct FlashbetMarketService {
 linera_sdk::service!(FlashbetMarketService);
 
 impl WithServiceAbi for FlashbetMarketService {
-    type Abi = flashbet_market::FlashbetMarketAbi;
+    type Abi = test_market::FlashbetMarketAbi;
 }
 
 impl Service for FlashbetMarketService {
