@@ -1,30 +1,30 @@
 #![cfg_attr(target_arch = "wasm32", no_main)]
 
-use flashbet_token::{Message, Operation};
+use test_token::{Message, Operation};
 use linera_sdk::{
     abis::fungible::{FungibleResponse, InitialState},
     linera_base_types::{Account, AccountOwner, Amount, WithContractAbi},
     Contract, ContractRuntime,
 };
 
-pub struct FlashbetTokenContract {
+pub struct testTokenContract {
     runtime: ContractRuntime<Self>,
 }
 
-linera_sdk::contract!(FlashbetTokenContract);
+linera_sdk::contract!(testTokenContract);
 
-impl WithContractAbi for FlashbetTokenContract {
-    type Abi = flashbet_token::FlashbetTokenAbi;
+impl WithContractAbi for testTokenContract {
+    type Abi = test_token::testTokenAbi;
 }
 
-impl Contract for FlashbetTokenContract {
+impl Contract for testTokenContract {
     type Message = Message;
     type Parameters = ();
     type InstantiationArgument = InitialState;
     type EventValue = ();
 
     async fn load(runtime: ContractRuntime<Self>) -> Self {
-        FlashbetTokenContract { runtime }
+        testTokenContract { runtime }
     }
 
     async fn instantiate(&mut self, state: Self::InstantiationArgument) {
@@ -46,7 +46,7 @@ impl Contract for FlashbetTokenContract {
             }
 
             Operation::TickerSymbol => {
-                FungibleResponse::TickerSymbol(flashbet_token::TICKER_SYMBOL.to_string())
+                FungibleResponse::TickerSymbol(test_token::TICKER_SYMBOL.to_string())
             }
 
             Operation::Claim { amount } => {
