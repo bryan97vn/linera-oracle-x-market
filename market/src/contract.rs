@@ -2,7 +2,7 @@
 
 mod state;
 
-use flashbet_market::{InstantiationArgument, Message, Operation};
+use test_market::{InstantiationArgument, Message, Operation};
 use flashbet_shared::{
     EventResult, MarketEvent, MarketId, MarketStatus, Payout,
 };
@@ -23,7 +23,7 @@ pub struct FlashbetMarketContract {
 linera_sdk::contract!(FlashbetMarketContract);
 
 impl WithContractAbi for FlashbetMarketContract {
-    type Abi = flashbet_market::FlashbetMarketAbi;
+    type Abi = test_market::FlashbetMarketAbi;
 }
 
 impl Contract for FlashbetMarketContract {
@@ -355,7 +355,7 @@ impl FlashbetMarketContract {
 
                 // Send Payout message to update User chain state tracking
                 self.runtime
-                    .prepare_message(flashbet_market::Message::Payout(payout.clone()))
+                    .prepare_message(test_market::Message::Payout(payout.clone()))
                     .with_authentication() // Forward Market chain identity
                     .send_to(bet.user_chain);
 
