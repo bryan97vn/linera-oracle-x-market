@@ -3,40 +3,40 @@
 mod state;
 
 use test_market::{InstantiationArgument, Message, Operation};
-use flashbet_shared::{
+use test_shared::{
     EventResult, MarketEvent, MarketId, MarketStatus, Payout,
 };
-use flashbet_token; // BET token application for cross-application calls
+use test_token; // BET token application for cross-application calls
 use linera_sdk::{
     linera_base_types::{ApplicationId, StreamName, StreamUpdate, WithContractAbi},
     views::{RootView, View},
     Contract, ContractRuntime,
 };
 
-use self::state::FlashbetMarketState;
+use self::state::testMarketState;
 
-pub struct FlashbetMarketContract {
-    state: FlashbetMarketState,
+pub struct testMarketContract {
+    state: testMarketState,
     runtime: ContractRuntime<Self>,
 }
 
-linera_sdk::contract!(FlashbetMarketContract);
+linera_sdk::contract!(testMarketContract);
 
-impl WithContractAbi for FlashbetMarketContract {
-    type Abi = test_market::FlashbetMarketAbi;
+impl WithContractAbi for testMarketContract {
+    type Abi = test_market::testMarketAbi;
 }
 
-impl Contract for FlashbetMarketContract {
+impl Contract for testMarketContract {
     type Message = Message;
     type Parameters = ();
     type InstantiationArgument = InstantiationArgument;
     type EventValue = MarketEvent;
 
     async fn load(runtime: ContractRuntime<Self>) -> Self {
-        let state = FlashbetMarketState::load(runtime.root_view_storage_context())
+        let state = testMarketState::load(runtime.root_view_storage_context())
             .await
             .expect("Failed to load state");
-        FlashbetMarketContract { state, runtime }
+        testMarketContract { state, runtime }
     }
 
     async fn instantiate(&mut self, argument: Self::InstantiationArgument) {
@@ -53,9 +53,9 @@ impl Contract for FlashbetMarketContract {
         self.state.oracle_app_id.set(Some(oracle_app_id));
 
         // Store BET token application ID
-        // Convert from untyped ApplicationId to typed ApplicationId<FlashbetTokenAbi>
+        // Convert from untyped ApplicationId to typed ApplicationId<testTokenAbi>
         // This is safe because ApplicationId's type parameter is phantom data for type safety only
-        let typed_app_id: linera_sdk::linera_base_types::ApplicationId<flashbet_token::FlashbetTokenAbi> =
+        let typed_app_id: linera_sdk::linera_base_types::ApplicationId<test_token::testTokenAbi> =
             unsafe { std::mem::transmute(argument.bet_token_id) };
         self.state.bet_token_id.set(Some(typed_app_id));
 
@@ -93,7 +93,7 @@ impl Contract for FlashbetMarketContract {
                 let market_info = self.state.get_market(event_id).await
                     .expect("Market not found");
                 assert!(
-                    flashbet_shared::validate_outcome_for_market(bet.outcome, &market_info.market_type),
+                    test_shared::validate_outcome_for_market(bet.outcome, &market_info.market_type),
                     "Invalid outcome {:?} for market type {:?}",
                     bet.outcome,
                     market_info.market_type
@@ -118,12 +118,12 @@ impl Contract for FlashbetMarketContract {
 
             Operation::CreateMarket { input } => {
                 // Validate event ID format
-                let event_id = flashbet_shared::EventId::new(input.event_id.clone());
-                flashbet_shared::validate_event_id(&event_id)
+                let event_id = test_shared::EventId::new(input.event_id.clone());
+                test_shared::validate_event_id(&event_id)
                     .expect("Invalid event ID format");
 
                 // Convert input to MarketInfo
-                let info = flashbet_shared::MarketInfo {
+                let info = test_shared::MarketInfo {
                     event_id: event_id.clone(),
                     description: input.description.clone(),
                     event_time: input.event_time,
@@ -212,7 +212,7 @@ impl Contract for FlashbetMarketContract {
                     None => return, // Market not found
                 };
 
-                if !flashbet_shared::validate_outcome_for_market(bet.outcome, &market_info.market_type) {
+                if !test_shared::validate_outcome_for_market(bet.outcome, &market_info.market_type) {
                     // Invalid outcome, ignore bet
                     return;
                 }
@@ -272,7 +272,7 @@ impl Contract for FlashbetMarketContract {
     }
 }
 
-impl FlashbetMarketContract {
+impl testMarketContract {
     /// Handle an oracle result and resolve the market
     async fn handle_oracle_result(&mut self, result: EventResult) {
         let event_id = &result.event_id;
@@ -334,7 +334,7 @@ impl FlashbetMarketContract {
 
                 // Transfer BET tokens to winner via BET token application
                 // Transfer from Market chain to winner's chain
-                let transfer_operation = flashbet_token::Operation::TransferCrossChain {
+                let transfer_operation = test_token::Operation::TransferCrossChain {
                     destination: bet.user_chain,
                     to: bet.user, // Transfer to winner's account
                     amount: payout_amount,
@@ -342,7 +342,7 @@ impl FlashbetMarketContract {
 
                 let response = self
                     .runtime
-                    .call_application::<flashbet_token::FlashbetTokenAbi>(
+                    .call_application::<test_token::testTokenAbi>(
                         false,
                         bet_token_id,
                         &transfer_operation,
